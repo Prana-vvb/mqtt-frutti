@@ -38,12 +38,12 @@ fn main() -> std::io::Result<()> {
     }
 
     let topic = format!("home/{}/temperature_humidity", SENSOR_ID);
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     log(&format!("Publishing data to topic '{}'...", topic));
     loop {
-        let temperature: f32 = rng.gen_range(18.0..28.0);
-        let humidity: f32 = rng.gen_range(30.0..70.0);
+        let temperature: f32 = rng.random_range(18.0..28.0);
+        let humidity: f32 = rng.random_range(30.0..70.0);
         let message = format!(
             "{{\"temperature\": {:.2}, \"humidity\": {:.2}}}",
             temperature, humidity
