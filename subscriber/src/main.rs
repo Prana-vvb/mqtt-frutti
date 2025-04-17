@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
 
-const MQTT_BROKER: &str = "broker.hivemq.com";
+const MQTT_BROKER: &str = "0.0.0.0";
 const MQTT_PORT: u16 = 1883;
 const PING_INTERVAL: Duration = Duration::from_secs(30);
 const SENSOR_ID: &str = "room_sensor_livingroom";

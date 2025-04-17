@@ -5,7 +5,7 @@ use std::net::TcpStream;
 use std::thread;
 use std::time::Duration;
 
-const MQTT_BROKER: &str = "broker.hivemq.com";
+const MQTT_BROKER: &str = "0.0.0.0";
 const MQTT_PORT: u16 = 1883;
 const SENSOR_ID: &str = "room_sensor_livingroom";
 
