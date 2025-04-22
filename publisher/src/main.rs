@@ -64,12 +64,12 @@ fn connect_packet(client_id: &str) -> Vec<u8> {
     pkt.push((idb.len() >> 8) as u8);
     pkt.push((idb.len() & 0xFF) as u8);
     pkt.extend_from_slice(idb);
-    pkt[1] = (pkt.len() - 2) as u8; // remaining length
+    pkt[1] = (pkt.len() - 2) as u8;
     pkt
 }
 
 fn publish_packet(topic: &str, message: &str) -> Vec<u8> {
-    let mut pkt = vec![0x30]; // PUBLISH, QoS 0
+    let mut pkt = vec![0x30];
     let tb = topic.as_bytes();
     let mb = message.as_bytes();
 

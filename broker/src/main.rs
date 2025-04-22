@@ -184,16 +184,8 @@ fn read_remaining_length(stream: &mut TcpStream) -> io::Result<usize> {
     Ok(value)
 }
 
-/// ***FIXED***: now skips:
-///  - 2 bytes (protocol name length)
-///  - `proto_len` bytes (protocol name)
-///  - 1 byte  (protocol level)
-///  - 1 byte  (connect flags)
-///  - 2 bytes (keep alive)
 fn extract_client_id(payload: &[u8]) -> io::Result<String> {
-    // 1) Protocol name length
     let proto_len = ((payload[0] as u16) << 8) | payload[1] as u16;
-    // 2) Skip length (2) + name (proto_len) + level(1) + flags(1) + keepalive(2)
     let id_len_pos = 2 + proto_len as usize + 1 + 1 + 2;
     if id_len_pos + 2 > payload.len() {
         return Err(io::Error::new(
@@ -201,7 +193,6 @@ fn extract_client_id(payload: &[u8]) -> io::Result<String> {
             "Malformed CONNECT",
         ));
     }
-    // 3) Read client‐ID length
     let id_len = ((payload[id_len_pos] as u16) << 8) | payload[id_len_pos + 1] as u16;
     let start = id_len_pos + 2;
     let end = start + id_len as usize;
@@ -215,7 +206,6 @@ fn extract_client_id(payload: &[u8]) -> io::Result<String> {
 }
 
 fn send_connack(stream: &mut TcpStream) -> io::Result<()> {
-    // CONNACK (0x20), len=2, flags=0, return code=0
     stream.write_all(&[0x20, 0x02, 0x00, 0x00])
 }
 
@@ -233,7 +223,7 @@ fn extract_publish_data(payload: &[u8]) -> io::Result<(String, Vec<u8>)> {
 }
 
 fn extract_subscribe_topics(payload: &[u8]) -> io::Result<Vec<String>> {
-    let mut pos = 2; // skip packet ID
+    let mut pos = 2;
     let mut out = Vec::new();
 
     while pos + 3 <= payload.len() {
@@ -247,7 +237,7 @@ fn extract_subscribe_topics(payload: &[u8]) -> io::Result<Vec<String>> {
         }
         let topic = String::from_utf8_lossy(&payload[pos..pos + tlen as usize]).into();
         pos += tlen as usize;
-        let _qos = payload[pos]; // skip QoS
+        let _qos = payload[pos];
         pos += 1;
         out.push(topic);
     }
@@ -259,7 +249,7 @@ fn send_suback(stream: &mut TcpStream, pid: u16, count: usize) -> io::Result<()>
     let mut pkt = vec![0x90, (2 + count) as u8];
     pkt.push((pid >> 8) as u8);
     pkt.push(pid as u8);
-    pkt.extend(std::iter::repeat(0x00).take(count)); // QoS=0 for each topic
+    pkt.extend(std::iter::repeat(0x00).take(count));
     stream.write_all(&pkt)
 }
 
@@ -281,8 +271,8 @@ fn deliver_message(stream: &mut TcpStream, topic: &str, message: &[u8]) -> io::R
     let tb = topic.as_bytes();
     let size = 2 + tb.len() + message.len();
     let mut pkt = Vec::with_capacity(1 + 4 + size);
-    pkt.push(0x30); // PUBLISH, QoS 0
-    pkt.extend(encode_rem_len(size)); // remaining length
+    pkt.push(0x30);
+    pkt.extend(encode_rem_len(size));
     pkt.push(((tb.len() as u16) >> 8) as u8);
     pkt.push((tb.len() as u16) as u8);
     pkt.extend(tb);
