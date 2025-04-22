@@ -60,20 +60,17 @@ fn main() -> std::io::Result<()> {
         }
 
         stream.set_read_timeout(Some(Duration::from_millis(100)))?;
-        match stream.read(&mut fh) {
-            Ok(1) => {
-                let packet_type = fh[0] >> 4;
-                let rem = read_remaining_length(&mut stream)?;
-                let mut buf = vec![0; rem];
-                stream.read_exact(&mut buf)?;
-                if packet_type == 3 {
-                    let (t, m) = decode_publish_payload(&buf);
-                    log(&format!("Received → '{}' = {}", t, m));
-                } else if packet_type == 13 {
-                    log("Received PINGRESP");
-                }
+        if let Ok(1) = stream.read(&mut fh) {
+            let packet_type = fh[0] >> 4;
+            let rem = read_remaining_length(&mut stream)?;
+            let mut buf = vec![0; rem];
+            stream.read_exact(&mut buf)?;
+            if packet_type == 3 {
+                let (t, m) = decode_publish_payload(&buf);
+                log(&format!("Received → '{}' = {}", t, m));
+            } else if packet_type == 13 {
+                log("Received PINGRESP");
             }
-            _ => {}
         }
     }
 }

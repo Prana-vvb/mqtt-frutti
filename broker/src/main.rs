@@ -73,11 +73,10 @@ impl Broker {
                     .subscriptions
                     .iter()
                     .any(|sub| topic_matches(sub, topic))
+                    && deliver_message(&mut client.stream, topic, msg).is_ok()
                 {
-                    if deliver_message(&mut client.stream, topic, msg).is_ok() {
-                        log(&format!("Delivered '{}' → {}", topic, id));
-                        delivered = true;
-                    }
+                    log(&format!("Delivered '{}' → {}", topic, id));
+                    delivered = true;
                 }
             }
             if delivered {
@@ -249,7 +248,7 @@ fn send_suback(stream: &mut TcpStream, pid: u16, count: usize) -> io::Result<()>
     let mut pkt = vec![0x90, (2 + count) as u8];
     pkt.push((pid >> 8) as u8);
     pkt.push(pid as u8);
-    pkt.extend(std::iter::repeat(0x00).take(count));
+    pkt.extend(std::iter::repeat_n(0x00, count));
     stream.write_all(&pkt)
 }
 
